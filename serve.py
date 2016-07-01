@@ -44,7 +44,7 @@ class Application(tornado.web.Application):
             # (r'/group/?(.*)$', GroupsHandler),
             # (r'/section/?(.*)$', SectionHandler),
             (r'/message/?(.*)$', MessageHandler),
-            (r'/fs_images/?(.*)$', ImageHandler),
+            (r'/fs/?(.*)$', ImageHandler),
             (r'/(.+\.html)', PageHandler),
             (r'/', MainHandler),
         ]

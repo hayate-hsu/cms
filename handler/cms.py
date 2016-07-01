@@ -252,7 +252,7 @@ class UeditorHandler(BaseHandler):
             msg.create_file(meta['body'], _id=_id, filename=filename, content_type=content_type)
             break
         if filename and _id:
-            self.render_json_response(url='fs_images/'+_id, title=filename, type=content_type, 
+            self.render_json_response(url='fs/'+_id, title=filename, type=content_type, 
                                       state='SUCCESS', **self.OK)
         else:
             raise HTTPError(400)
@@ -277,8 +277,6 @@ class ImageHandler(BaseHandler):
         _id = _id.split('.')[0]
         gridout = msg.get_file(_id)
         self.set_header('Content_Type', gridout.content_type)
-        print(gridout.content_type)
-        print(gridout.filename)
         self.finish(gridout.read())
 
     def post(self, _id=None):
@@ -302,7 +300,7 @@ class ImageHandler(BaseHandler):
             break
 
         if filename:
-            self.render_json_response(url='fs_images/'+_id, **self.OK)
+            self.render_json_response(url='fs/'+_id, **self.OK)
         else:
             raise HTTPError(400)
     
