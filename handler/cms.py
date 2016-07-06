@@ -153,7 +153,7 @@ class MessageHandler(BaseHandler):
         if accept.startswith('application/json'):
             self.render_json_response(Code=200, Msg='OK', **message)
         else:
-            if self.is_mobile():
+            if self.is_mobile:
                 self.render('m_message.tmpt', **message)
             else:
                 self.render('message.tmpt', **message)
