@@ -149,10 +149,6 @@ def main():
     with open(portal_pid, 'w') as f:
         f.write('{}'.format(os.getpid()))
 
-    # log_path = os.path.join('/var/log', options.app) 
-    # if not os.path.exists(log_path):
-    #     os.mkdir(log_path, mode=0o755)
-
     # import tcelery
     # tcelery.setup_nonblocking_producer()
 

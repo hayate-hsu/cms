@@ -252,7 +252,7 @@ class UeditorHandler(BaseHandler):
             msg.create_file(meta['body'], _id=_id, filename=filename, content_type=content_type)
             break
         if filename and _id:
-            self.render_json_response(url='fs/'+_id, title=filename, type=content_type, 
+            self.render_json_response(url='/fs/'+_id, title=filename, type=content_type, 
                                       state='SUCCESS', **self.OK)
         else:
             raise HTTPError(400)
@@ -300,7 +300,7 @@ class ImageHandler(BaseHandler):
             break
 
         if filename:
-            self.render_json_response(url='fs/'+_id, **self.OK)
+            self.render_json_response(url='/fs/'+_id, **self.OK)
         else:
             raise HTTPError(400)
     
