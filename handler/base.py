@@ -101,8 +101,8 @@ class BaseHandler(tornado.web.RequestHandler):
             Render the template with the given arguments
         '''
         directory = TEMPLATE_PATH
-        if self.is_mobile:
-            directory = MOBILE_TEMPLATE_PATH
+        # if self.is_mobile:
+        #     directory = MOBILE_TEMPLATE_PATH
 
         if not os.path.exists(os.path.join(directory, filename)):
             raise HTTPError(404, 'File Not Found')
