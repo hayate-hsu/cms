@@ -145,9 +145,9 @@ class MSG_DB(MySQL):
                 '''.format(filters, gmtype, isimg, groups, __MASK__, mask, pos, nums)
             else:
                 # doesn't check message type
-                sql = '''select {}, section.name as section from message, section 
-                where {}{}message.groups = "{}" and message.section = section.id{} 
-                order by message.status desc, message.ctime desc limit {},{}
+                sql = '''select {} from message  
+                where {}{} groups = "{}" 
+                order by status desc, ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, label, pos, nums)
 
             cur.execute(sql)
