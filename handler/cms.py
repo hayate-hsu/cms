@@ -78,14 +78,14 @@ class GMTypeHandler(BaseHandler):
         self.render_json_response(gmtypes=gmtypes, **self.OK)
 
     def post(self, _id=''):
-        user = self.get_argument('manager')
+        user = self.get_argument('manager') or self.get_argument('user')
         group = manager.check_location(user)
         name = self.get_argument('name')
         msg.create_gmtype(group, name)
         self.render_json_response(**self.OK)
 
     def delete(self, _id=''):
-        user = self.get_argument('manager')
+        user = self.get_argument('manager') or self.get_argument('user')
         group = manager.check_location(user)
         msg.delete_gmtype(group, _id)
         self.render_json_response(**self.OK)
@@ -182,7 +182,7 @@ class MessageHandler(BaseHandler):
             groups = manager.check_location(user)
         else:
             # user get messages
-            groups = int(self.get_argument('groups'))
+            groups = self.get_argument('groups')
         label = self.get_argument('label', '')
         page = int(self.get_argument('page', 0))
         nums = int(self.get_argument('per', 10))

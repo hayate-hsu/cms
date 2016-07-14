@@ -27,7 +27,7 @@ from config import settings
 
 # from handler.example import MainHandler
 from handler.cms import (MainHandler, AccountHandler, UeditorHandler, ImageHandler, 
-                         MessageHandler, PageHandler)
+                         GMTypeHandler, MessageHandler, PageHandler)
 from common import util 
 
 
@@ -43,6 +43,7 @@ class Application(tornado.web.Application):
             (r'/ue$', UeditorHandler),
             # (r'/group/?(.*)$', GroupsHandler),
             # (r'/section/?(.*)$', SectionHandler),
+            (r'/gmtype/?(.*)$', GMTypeHandler),
             (r'/message/?(.*)$', MessageHandler),
             (r'/fs/?(.*)$', ImageHandler),
             (r'/(.+\.html)', PageHandler),

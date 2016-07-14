@@ -39,13 +39,13 @@ class MSG_DB(MySQL):
 
     def get_gmtype(self, group, _id):
         with Cursor(self.dbpool) as cur:
-            sql = 'select * from gmtype where id = {} and groups = {}'.format(_id, group)
+            sql = 'select * from gmtype where id = {} and groups = "{}"'.format(_id, group)
             cur.execute(sql)
             return cur.fetchone()
 
     def get_gmtypes(self, group):
         with Cursor(self.dbpool) as cur:
-            sql = 'select * from gmtype where groups = {} order by id'.format(group)
+            sql = 'select * from gmtype where groups = "{}" order by id'.format(group)
             cur.execute(sql)
             results = cur.fetchall()
             return results if results else []
@@ -53,7 +53,7 @@ class MSG_DB(MySQL):
     def delete_gmtype(self, group, _id):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
-            sql = 'delete from gmtype where id = {} and groups = {}'.format(_id, group)
+            sql = 'delete from gmtype where id = {} and groups = "{}"'.format(_id, group)
             cur.execute(sql)
             conn.commit()
 
@@ -140,13 +140,13 @@ class MSG_DB(MySQL):
             label = " and label like'%{}%'".format(label) if label else ''
 
             if mask:
-                sql = '''select {} from message where {}{} groups = {} and mask & {} = {} 
+                sql = '''select {} from message where {}{} groups = "{}" and mask & {} = {} 
                 order by message.status desc, message.ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, __MASK__, mask, pos, nums)
             else:
                 # doesn't check message type
                 sql = '''select {}, section.name as section from message, section 
-                where {}{}message.groups = {} and message.section = section.id{} 
+                where {}{}message.groups = "{}" and message.section = section.id{} 
                 order by message.status desc, message.ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, label, pos, nums)
 
