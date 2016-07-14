@@ -140,13 +140,13 @@ class MSG_DB(MySQL):
             label = " and label like'%{}%'".format(label) if label else ''
 
             if mask:
-                sql = '''select {} from message where {}{} groups = "{}" and mask & {} = {} 
+                sql = '''select {} from message where {}{} groups = "{}" and mask & {} = {} {}  
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmtype, isimg, groups, __MASK__, mask, pos, nums)
+                '''.format(filters, gmtype, isimg, groups, __MASK__, mask, label, pos, nums)
             else:
                 # doesn't check message type
                 sql = '''select {} from message  
-                where {}{} groups = "{}" 
+                where {}{} groups = "{}" {} 
                 order by status desc, ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, label, pos, nums)
 
