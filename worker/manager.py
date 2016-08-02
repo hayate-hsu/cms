@@ -1,6 +1,6 @@
 '''
 '''
-# from tornado.web import HTTPError
+from tornado.web import HTTPError
 # import # datetime
 # import # math
 
@@ -8,6 +8,7 @@ _MANAGER_CACHE_ = {}
 
 # from db import mongo, mysql
 from db.manager import db as mysql
+from common import util
 
 def check_location(manager):
     '''
@@ -34,6 +35,13 @@ def check_location(manager):
         return record['_location']
 
     raise ValueError('can\'t found {}\'s group'.format(manager))
+
+def check_token(user, token):
+    token,expired = token.split('|')
+    token2 = util.token2(user, expired)
+
+    if token != token2:
+        raise HTTPError(400, reason='Abnormal token')
 
 def get_manager(user, password=''):
     '''

@@ -34,6 +34,10 @@ def get_gmtype(group, _id):
 def get_gmtypes(group):
     return mysql.get_gmtypes(group)
 
+@util.check_codes
+def update_gmtype(_id, group, name):
+    return mysql.update_gmtype(_id, group, name)
+
 def delete_gmtype(group, _id):
     mysql.delete_gmtype(group, _id)
 

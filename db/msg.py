@@ -33,7 +33,7 @@ class MSG_DB(MySQL):
     def create_gmtype(self, group, name):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
-            sql = 'insert into gmtype (group, name) values({}, "{}")'.format(group, name)
+            sql = 'insert into gmtype (groups, name) values("{}", "{}")'.format(group, name)
             cur.execute(sql)
             conn.commit()
 
@@ -49,6 +49,14 @@ class MSG_DB(MySQL):
             cur.execute(sql)
             results = cur.fetchall()
             return results if results else []
+
+    def update_gmtype(self, _id, group, name):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'update gmtype set name="{}" where id={} and groups="{}"'.format(name, _id, group)
+            cur.execute(sql)
+            conn.commit()
+
 
     def delete_gmtype(self, group, _id):
         with Connect(self.dbpool) as conn:
@@ -133,21 +141,23 @@ class MSG_DB(MySQL):
             #     where {}{}message.groups = {} and message.section = section.id{} 
             #     order by message.status desc, message.ctime desc limit {},{}
             #     '''.format(filters, gmtype, isimg, groups, label, pos, nums)
-            filters = 'id, title, subtitle, mask, author, groups, status, ctime, image'
+            filters = 'message.id, message.title, message.subtitle, message.mask, \
+                    message.author, message.groups, message.status, message.ctime, message.image'
             sql = ''
-            gmtype = 'gmtype = {} and '.format(gmtype) if gmtype else ''
-            isimg = 'image <> "" and '.format(isimg) if isimg else ''
-            label = " and label like'%{}%'".format(label) if label else ''
+            gmtype = 'message.gmtype = {} and '.format(gmtype) if gmtype else ''
+            isimg = 'message.image <> "" and '.format(isimg) if isimg else ''
+            label = " and message.label like'%{}%'".format(label) if label else ''
 
             if mask:
-                sql = '''select {} from message where {}{} groups = "{}" and mask & {} = {} {}  
+                sql = '''select {}, gmtype.name as gmtype from message, gmtype 
+                where {}{} message.groups = "{}" and message.mask & {} = {} {} and message.gmtype=gmtype.id 
                 order by message.status desc, message.ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, __MASK__, mask, label, pos, nums)
             else:
                 # doesn't check message type
-                sql = '''select {} from message  
-                where {}{} groups = "{}" {} 
-                order by status desc, ctime desc limit {},{}
+                sql = '''select {}, gmtype.name as gmtype from message  
+                where {}{} message.groups = "{}" {} and message.gmtype=gmtype.id  
+                order by message.status desc, message.ctime desc limit {},{}
                 '''.format(filters, gmtype, isimg, groups, label, pos, nums)
 
             cur.execute(sql)

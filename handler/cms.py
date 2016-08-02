@@ -60,14 +60,26 @@ class PageHandler(BaseHandler):
             token2 = util.token2(user, expired)
             if token != token2:
                 raise HTTPError(400, reason='Abnormal token')
+            
+            group = manager.check_location(user)
 
-            self.render(page, groups=manager.check_location(user))
+            gmtypes = msg.get_gmtypes(group)
+            self.render(page, groups=group, gmtypes=gmtypes)
         else:
             return self.render(page)
 
-class GMTypeHandler(BaseHandler):
+class AuthTokenHandler(BaseHandler):
+    def check_token(self):
+        user = self.get_argument('manager') or self.get_argument('user')
+        token = self.get_argument('token')
+
+        manager.check_token(user, token)
+
+
+class GMTypeHandler(AuthTokenHandler):
     def get(self, _id=''):
         user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
         group = manager.check_location(user)
         if _id:
             gmtype = msg.get_gmtype(group, _id)
@@ -79,13 +91,25 @@ class GMTypeHandler(BaseHandler):
 
     def post(self, _id=''):
         user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
         group = manager.check_location(user)
         name = self.get_argument('name')
         msg.create_gmtype(group, name)
         self.render_json_response(**self.OK)
 
+    def put(self, _id=''):
+        if not _id:
+            raise HTTPError(400)
+        user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
+        group = manager.check_location(user)
+        name = self.get_argument('name')
+        msg.update_gmtype(_id, group, name)
+        self.render_json_response(**self.OK)
+
     def delete(self, _id=''):
         user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
         group = manager.check_location(user)
         msg.delete_gmtype(group, _id)
         self.render_json_response(**self.OK)
@@ -118,7 +142,7 @@ class AccountHandler(BaseHandler):
 #  Message handler
 #
 # **************************************************
-class MessageHandler(BaseHandler):
+class MessageHandler(AuthTokenHandler):
     '''
         maintain message
         message type: 
@@ -204,7 +228,8 @@ class MessageHandler(BaseHandler):
             title subtitle section mask author groups status ctime content image
             labels : labes are separate by ' '
         '''
-        user = self.get_argument('manager')
+        user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
         kwargs = {key:value[0] for key,value in self.request.arguments.iteritems()}
         kwargs['author'] = user
         kwargs.pop('token')
@@ -218,6 +243,7 @@ class MessageHandler(BaseHandler):
         '''
             update message record
         '''
+        self.check_token()
         kwargs = {key:value[0] for key,value in self.request.arguments.iteritems()}
         kwargs.pop('token')
         kwargs.pop('manager')
@@ -226,6 +252,7 @@ class MessageHandler(BaseHandler):
         self.render_json_response(**self.OK)
 
     def delete(self, _id):
+        self.check_token()
         msg.delete_message(_id)
         self.render_json_response(**self.OK)
 

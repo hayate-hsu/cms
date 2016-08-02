@@ -43,7 +43,7 @@ class Application(tornado.web.Application):
             (r'/ue$', UeditorHandler),
             # (r'/group/?(.*)$', GroupsHandler),
             # (r'/section/?(.*)$', SectionHandler),
-            (r'/gmtype/?(.*)$', GMTypeHandler),
+            (r'/gmtype/(.*)$', GMTypeHandler),
             (r'/message/?(.*)$', MessageHandler),
             (r'/fs/?(.*)$', ImageHandler),
             (r'/(.+\.html)', PageHandler),
