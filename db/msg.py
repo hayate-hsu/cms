@@ -113,7 +113,7 @@ class MSG_DB(MySQL):
             cur.execute(sql)
             return cur.fetchone()
 
-    def get_messages(self, groups, mask, isimg, gmtype, label, pos, nums=10):
+    def get_messages(self, groups, mask, isimg, gmtype, label, pos, nums=10, ismanager=False):
         '''
             id title subtitle section mask author groups status ctime content image
             get groups's messages excelpt content filed
@@ -143,22 +143,24 @@ class MSG_DB(MySQL):
             #     '''.format(filters, gmtype, isimg, groups, label, pos, nums)
             filters = 'message.id, message.title, message.subtitle, message.mask, \
                     message.author, message.groups, message.status, message.ctime, message.image'
-            sql = ''
+            sql, gmfilter = '', ''
             gmtype = 'message.gmtype = {} and '.format(gmtype) if gmtype else ''
             isimg = 'message.image <> "" and '.format(isimg) if isimg else ''
             label = " and message.label like'%{}%'".format(label) if label else ''
+            if ismanager:
+                gmfilter = 'gmtype.name as gmtype '
 
             if mask:
-                sql = '''select {}, gmtype.name as gmtype from message, gmtype 
+                sql = '''select {}, {} from message, gmtype 
                 where {}{} message.groups = "{}" and message.mask & {} = {} {} and message.gmtype=gmtype.id 
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmtype, isimg, groups, __MASK__, mask, label, pos, nums)
+                '''.format(filters, gmfilter, gmtype, isimg, groups, __MASK__, mask, label, pos, nums)
             else:
                 # doesn't check message type
-                sql = '''select {}, gmtype.name as gmtype from message  
+                sql = '''select {}, {} from message  
                 where {}{} message.groups = "{}" {} and message.gmtype=gmtype.id  
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmtype, isimg, groups, label, pos, nums)
+                '''.format(filters, gmfilter, gmtype, isimg, groups, label, pos, nums)
 
             cur.execute(sql)
             results = cur.fetchall()

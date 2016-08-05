@@ -195,7 +195,7 @@ class MessageHandler(AuthTokenHandler):
 
         # get messages 
         user = self.get_argument('manager', '') or self.get_argument('user', '')
-        groups = 0
+        groups, ismanager = 0, False
         if user:
             # manager get it's messages
             token = self.get_argument('token')
@@ -204,6 +204,7 @@ class MessageHandler(AuthTokenHandler):
             if token != token2:
                 raise HTTPError(400, reason='Abnormal token')
             groups = manager.check_location(user)
+            ismanager = True
         else:
             # user get messages
             groups = self.get_argument('groups')
@@ -215,7 +216,7 @@ class MessageHandler(AuthTokenHandler):
         isimg = int(self.get_argument('isimg', 0))
         pos = page*nums
 
-        messages = msg.get_messages(groups, mask, isimg, gmtype, label, pos, nums)
+        messages = msg.get_messages(groups, mask, isimg, gmtype, label, pos, nums, ismanager)
         # logger.info('messages: {}'.format(messages[0]['image']))
         isEnd = 1 if len(messages) < nums else 0
 
