@@ -27,7 +27,8 @@ from config import settings
 
 # from handler.example import MainHandler
 from handler.cms import (MainHandler, AccountHandler, UeditorHandler, ImageHandler, 
-                         GMTypeHandler, MessageHandler, PageHandler)
+                         GMTypeHandler, MessageHandler, PageHandler, JobsHandler, 
+                         JobsTypeHandler, JobsAddressHandler)
 from common import util 
 
 
@@ -46,6 +47,10 @@ class Application(tornado.web.Application):
             (r'/gmtype/(.*)$', GMTypeHandler),
             (r'/message/?(.*)$', MessageHandler),
             (r'/fs/?(.*)$', ImageHandler),
+            (r'/job/type/(.*)$', JobsTypeHandler),
+            (r'/job/address/(.*)$', JobsAddressHandler),
+            (r'/jobs.json$', JobsHandler),
+            (r'/job/(.*)$', JobsHandler),
             (r'/(.+\.html)', PageHandler),
             (r'/', MainHandler),
         ]

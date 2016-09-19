@@ -66,6 +66,123 @@ class MSG_DB(MySQL):
             conn.commit()
 
     # ********************************************
+    # job operator 
+    # ********************************************
+    def get_jobs_types(self):
+        with Cursor(self.dbpool) as cur:
+            sql = 'select * from job_types order by id'.format()
+            cur.execute(sql)
+            return cur.fetchall()
+
+    def create_jobs_type(self, name):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'insert into job_types (name) values ("{}")'.format(name)
+            cur.execute(sql)
+            conn.commit()
+
+    def update_jobs_type(self, _id, name):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'update job_types set name="{}" where id={}'.format(name, _id)
+            cur.execute(sql)
+            conn.commit()
+
+
+    def get_jobs_address(self):
+        with Cursor(self.dbpool) as cur:
+            sql = 'select * from address order by id'
+            cur.execute(sql)
+            return cur.fetchall()
+
+    def create_jobs_address(self, name):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'insert into address (name) values ("{}")'.format(name)
+            cur.execute(sql)
+            conn.commit()
+
+    def update_jobs_address(self, _id, name):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'update address set name="{}" where id={}'.format(name, _id)
+            cur.execute(sql)
+            conn.commit()
+
+
+
+    def get_recrut_types(self):
+        with Cursor(self.dbpool) as cur:
+            sql = 'select * from recrut order by id'
+            cur.execute(sql)
+            return cur.fetchall()
+
+
+    def create_job(self, **kwargs):
+        '''
+            create new job reocrds
+            {id:'', name:'', type:'', mask:'', address_id:'', remand:'', 
+            duty:'', department_id:'', ctime:'', expire:''}
+        '''
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            key_str = ', '.join(kwargs.keys())
+            value_str = ', '.join(["'{}'".format(item) for item in kwargs.values()])
+            sql = 'insert into jobs ({}) values({})'.format(key_str, value_str)
+            cur.execute(sql)
+            conn.commit()
+
+    def update_job(self, _id, **kwargs):
+        '''
+            modify job info
+        '''
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            modify_str = ', '.join(["{} = '{}'".format(key,value) for key,value in kwargs.iteritems()])
+            sql = 'update jobs set {} where id = "{}"'.format(modify_str, _id)
+            cur.execute(sql)
+            conn.commit()
+
+    def delete_job(self, _id):
+        '''
+            delete special message
+        '''
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            sql = 'delete from message where id = "{}"'.format(_id)
+            cur.execute(sql)
+            conn.commit()
+
+    def get_job(self, _id):
+        '''
+            get special job
+        '''
+        with Cursor(self.dbpool) as cur:
+            sql = 'select *from message where id="{}"'.format(_id)
+            cur.execute(sql)
+            return cur.fetchone()
+
+    def get_jobs(self, groups):
+        '''
+            return sociology & school
+            1 : sociology
+            0 : school
+        '''
+        with Cursor(self.dbpool) as cur:
+            # query sociology jobs
+            sql = 'select * from jobs where groups="{}" and mask=1 order by ctime desc'.format(groups)
+            cur.execute(sql)
+            sociology = cur.fetchall()
+
+            sql = 'select * from jobs where groups="{}" and mask=0 order by ctime desc'.format(groups)
+            cur.execute(sql)
+            school = cur.fetchall()
+
+            return sociology, school
+
+
+
+    # ********************************************
     # message operator
     # ********************************************
     def create_message(self, **kwargs):
@@ -87,7 +204,7 @@ class MSG_DB(MySQL):
         '''
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
-            modify_str = ', '.join("{} = '{}'".format(key,value) for key,value in kwargs.iteritems())
+            modify_str = ', '.join(["{} = '{}'".format(key,value) for key,value in kwargs.iteritems()])
             sql = 'update message set {} where id = "{}"'.format(modify_str, _id)
             cur.execute(sql)
             conn.commit()
@@ -109,11 +226,11 @@ class MSG_DB(MySQL):
         with Cursor(self.dbpool) as cur:
             # sql = '''select message.*, section.name as section from message, section 
             # where message.id="{}" and message.section = section.id'''.format(_id)
-            sql = 'select *from message where id="{}"'.format(_id)
+            sql = 'select * from message where id="{}"'.format(_id)
             cur.execute(sql)
             return cur.fetchone()
 
-    def get_messages(self, groups, mask, isimg, gmtype, label, pos, nums=10, ismanager=False):
+    def get_messages(self, groups, mask, isimg, gmtype, label, expired, pos, nums=10, ismanager=False):
         '''
             id title subtitle section mask author groups status ctime content image
             get groups's messages excelpt content filed
@@ -143,24 +260,30 @@ class MSG_DB(MySQL):
             #     '''.format(filters, gmtype, isimg, groups, label, pos, nums)
             filters = 'message.id, message.title, message.subtitle, message.mask, \
                     message.author, message.groups, message.status, message.ctime, message.image'
-            sql, gmfilter = '', ''
-            gmtype = 'message.gmtype = {} and '.format(gmtype) if gmtype else ''
-            isimg = 'message.image <> "" and '.format(isimg) if isimg else ''
+            sql, gmfilter, gmjoin = '', '', ''
+            gmtype = 'and message.gmtype = {}'.format(gmtype) if gmtype else ''
+            isimg = 'and message.image <> ""'.format(isimg) if isimg else ''
             label = " and message.label like'%{}%'".format(label) if label else ''
+            expired = ' and message.ctime > "{}" '.format(expired) if expired else ''
             if ismanager:
-                gmfilter = 'gmtype.name as gmtype '
+                gmfilter = ',gmtype.name as gmtype '
+                gmjoin = 'left join gmtype on message.gmtype=gmtype.id '
 
             if mask:
-                sql = '''select {}, {} from message, gmtype 
-                where {}{} message.groups = "{}" and message.mask & {} = {} {} and message.gmtype=gmtype.id 
+                sql = '''select {} {} from message {} 
+                where message.groups = "{}" {} {} and message.mask & {} = {} {} {} 
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmfilter, gmtype, isimg, groups, __MASK__, mask, label, pos, nums)
+                '''.format(filters, gmfilter, gmjoin, groups, gmtype, isimg, 
+                           __MASK__, mask, label, expired, pos, nums)
             else:
                 # doesn't check message type
-                sql = '''select {}, {} from message  
-                where {}{} message.groups = "{}" {} and message.gmtype=gmtype.id  
-                order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmfilter, gmtype, isimg, groups, label, pos, nums)
+                sql = '''select {} {} from message {}  
+                where message.groups = "{}" {} {} {}  
+                order by message.status desc, message.ctime desc limit {},{} {} 
+                '''.format(filters, gmfilter, gmjoin, groups, gmtype, 
+                           isimg, label, expired, pos, nums)
+
+            access_log.info('data: {}'.format(sql))
 
             cur.execute(sql)
             results = cur.fetchall()

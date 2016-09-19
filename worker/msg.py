@@ -88,13 +88,16 @@ def delete_message(_id):
 def get_message(_id):
     return mysql.get_message(_id)
 
-def get_messages(groups, mask, isimg, gmtype, label, pos, nums):
+def get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager):
     '''
         get messages 
         filter  : groups, mask
         position: start , per
     '''
-    return mysql.get_messages(groups, mask, isimg, gmtype, label, pos, nums)
+    if expired:
+        days = 0 - expired
+        expired = util.now('%Y-%m-%d', days=days)
+    return mysql.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager)
 
 def create_file(data, **kwargs):
     '''
@@ -114,3 +117,78 @@ def get_file(_id):
     if not gridout:
         raise HTTPError(404)
     return gridout
+
+# ***************************************
+#
+# jobs operator
+#
+# ***************************************
+def get_jobs_types():
+    '''
+        {[{id:'', name:''}]}
+    '''
+    results = mysql.get_jobs_types()
+    results = results if results else {}
+    return {item['id']:item['name'] for item in results}
+
+@util.check_codes
+def create_jobs_type(name):
+    mysql.create_jobs_type(name)
+
+@util.check_codes
+def update_jobs_type(_id, name):
+    assert _id
+    mysql.update_jobs_type(_id, name)
+
+def get_jobs_address():
+    '''
+    '''
+    results = mysql.get_jobs_address()
+    results = results if results else {}
+    return {item['id']:item['name'] for item in results}
+        
+@util.check_codes
+def create_jobs_address(name):
+    mysql.create_jobs_address(name)
+
+@util.check_codes
+def update_jobs_address(_id, name):
+    assert _id
+    mysql.update_jobs_address(_id, name)
+
+
+def get_recrut_types():
+    results = mysql.get_recrut_types()
+    results = results if results else {}
+    return {item['id']:item['name'] for item in results}
+
+@util.check_codes
+def create_recrut_type(_id, name):
+    mysql.create_recrut_type(_id, name)
+
+@util.check_codes
+def update_recrut_type(_id, name):
+    assert _id
+    mysql.update_recrut_type(_id, name)
+
+
+@util.check_codes
+def create_job(**kwargs):
+    assert 'groups' in kwargs
+    return mysql.create_job(**kwargs)
+
+@util.check_codes
+def update_job(_id, **kwargs):
+    assert _id
+    kwargs.pop('id', '')
+    mysql.update_job(_id, **kwargs)
+
+def delete_job(_id):
+    assert _id
+    mysql.delete_job(_id)
+
+def get_job(_id):
+    return mysql.get_job(_id)
+
+def get_jobs(groups):
+    return mysql.get_jobs(groups)

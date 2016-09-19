@@ -22,6 +22,8 @@ from worker import msg
 from worker import manager
 
 import os
+import datetime
+import collections
 
 from config import ueditor
 
@@ -166,7 +168,8 @@ class MessageHandler(AuthTokenHandler):
             self.finish('{}({})'.format(callback, json_encoder(kwargs)))
         else:
             self.set_status(kwargs['Code'], kwargs.get('Msg', None))
-            self.set_header('Content-Type', 'application/json')
+            # self.set_header('Content-Type', 'application/json')
+            self.set_header('Content-Type', 'application/json;charset=utf-8')
             self.finish(json_encoder(kwargs))
 
     def render_message_response(self, message):
@@ -214,9 +217,10 @@ class MessageHandler(AuthTokenHandler):
         mask = int(self.get_argument('mask', 0))
         gmtype = int(self.get_argument('gmtype', 0))
         isimg = int(self.get_argument('isimg', 0))
+        expired = int(self.get_argument('expired', 0))
         pos = page*nums
 
-        messages = msg.get_messages(groups, mask, isimg, gmtype, label, pos, nums, ismanager)
+        messages = msg.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager)
         # logger.info('messages: {}'.format(messages[0]['image']))
         isEnd = 1 if len(messages) < nums else 0
 
@@ -332,3 +336,186 @@ class ImageHandler(BaseHandler):
         else:
             raise HTTPError(400)
     
+
+# Jobs handler
+class JobsHandler(AuthTokenHandler):
+    '''
+    '''
+    JOBS = ['' ,b'']
+
+    @classmethod
+    def get_jobs(cls, groups):
+        '''
+            delete yesterday's data
+            cache today's data
+            # cached 1 hours 
+        '''
+        now = _now('%Y-%d-%m %H')
+        if now != cls.JOBS[0]:
+            # update data & date
+            sociology, school = msg.get_jobs(groups)
+            types = msg.get_jobs_types() 
+            recurt = msg.get_recrut_types()
+            address = msg.get_jobs_address()
+            
+            _01 = msg.get_message(groups+'-01')
+            _02 = msg.get_message(groups+'-02')
+
+            cls.JOBS[1] = json_encoder({'job_type':types, 'job_address':address, 'recrut_type':recurt,
+                                        'sociology':sociology, 'school':school, groups+'-01':_01, groups+'-02':_02, 
+                                        'Code':200, 'Msg':'OK'})
+
+            cls.JOBS[0] = now
+
+        return cls.JOBS[1] 
+
+    def get(self, _id=''):
+        '''
+            get special & all jobs
+        '''
+        if _id:
+            job = msg.get_job(_id)
+            self.render_json_reponse(Code=200, Msg='OK', **job)
+        else:
+            user = self.get_argument('manager', '') or self.get_argument('user', '')
+            is_cms = False
+            if user:
+                self.check_token()
+                is_cms = True 
+                groups = manager.check_location(user)
+            else:
+                groups = self.get_argument('groups')
+
+            if is_cms:
+                # get_all jobs, not read from cache
+                # disable cache
+                self.JOBS[0] = ''
+                data = self.get_jobs(groups)
+                self.set_header('Content-Type', 'application/json;charset=utf-8')
+                self.finish(data)
+            else:
+                data = self.get_jobs(groups)
+                seconds = 86400     # 86400 seconds = 1 day
+                self.set_header('Expires', datetime.datetime.utcnow()+datetime.timedelta(seconds=seconds))
+                self.set_header('Cache-Control', 'max-age='+str(seconds))
+
+                self.set_header('Content-Type', 'application/json;charset=utf-8')
+                self.finish(data)
+
+            
+
+    def post(self, _id=''):
+        user = self.get_argument('manager') or self.get_argument('user')
+        self.check_token()
+        kwargs = {key:value[0] for key,value in self.request.arguments.iteritems()}
+        kwargs.pop('token')
+        kwargs.pop('manager', '')
+        kwargs.pop('user', '')
+        kwargs['groups'] = manager.check_location(user)
+       
+        msg.create_job(**kwargs)
+        self.render_json_response(**self.OK)
+    
+    def put(self, _id):
+        self.check_token()
+        kwargs = {key:value[0] for key,value in self.request.arguments.iteritems()}
+        kwargs.pop('token')
+        kwargs.pop('manager', '')
+        kwargs.pop('user', '')
+
+        msg.update_job(_id, **kwargs)
+        self.render_json_response(**self.OK)
+
+    def delete(self, _id):
+        self.check_token()
+
+        msg.delete_job(_id)
+        self.render_json_response(**self.OK)
+
+# Jobs type handler
+class JobsTypeHandler(AuthTokenHandler):
+    '''
+    '''
+    @classmethod
+    def check_name(cls, name):
+        '''
+            check name: if already return True, else False
+        '''
+        types = msg.get_jobs_types() 
+        return True if name in types.values() else False
+
+
+    def get(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        types = msg.get_jobs_types() 
+
+        self.render_json_response(job_type=types, **self.OK)
+
+    def post(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        name = self.get_argument('name')
+        if not self.check_name(name):
+            msg.create_jobs_type(name)
+
+        self.render_json_response(**self.OK)
+
+    def put(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        name = self.get_argument('name')
+        if not self.check_name(name):
+            msg.update_jobs_type(_id, name)
+
+        self.render_json_response(**self.OK)
+
+# Jobs address handler
+class JobsAddressHandler(AuthTokenHandler):
+    '''
+    '''
+    @classmethod
+    def check_name(cls, name):
+        '''
+            check name: if already return True, else False
+        '''
+        address = msg.get_jobs_address() 
+        return True if name in address.values() else False
+
+    def get(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        address = msg.get_jobs_address() 
+
+        self.render_json_response(job_address=address, **self.OK)
+
+    def post(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        name = self.get_argument('name')
+        if not self.check_name(name):
+            msg.create_jobs_address(name)
+
+        self.render_json_response(**self.OK)
+
+    def put(self, _id=''):
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        self.check_token()
+        groups = manager.check_location(user)
+        assert groups
+        name = self.get_argument('name')
+        if not self.check_name(name):
+            msg.update_jobs_address(_id, name)
+
+        self.render_json_response(**self.OK)
+
