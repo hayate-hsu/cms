@@ -149,7 +149,7 @@ class MSG_DB(MySQL):
         '''
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
-            sql = 'delete from message where id = "{}"'.format(_id)
+            sql = 'delete from jobs where id = "{}"'.format(_id)
             cur.execute(sql)
             conn.commit()
 
@@ -158,7 +158,7 @@ class MSG_DB(MySQL):
             get special job
         '''
         with Cursor(self.dbpool) as cur:
-            sql = 'select *from message where id="{}"'.format(_id)
+            sql = 'select * from jobs where id="{}"'.format(_id)
             cur.execute(sql)
             return cur.fetchone()
 
@@ -282,8 +282,6 @@ class MSG_DB(MySQL):
                 order by message.status desc, message.ctime desc limit {},{} {} 
                 '''.format(filters, gmfilter, gmjoin, groups, gmtype, 
                            isimg, label, expired, pos, nums)
-
-            access_log.info('data: {}'.format(sql))
 
             cur.execute(sql)
             results = cur.fetchall()

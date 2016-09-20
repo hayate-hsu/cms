@@ -375,7 +375,9 @@ class JobsHandler(AuthTokenHandler):
         '''
         if _id:
             job = msg.get_job(_id)
-            self.render_json_reponse(Code=200, Msg='OK', **job)
+            if not job:
+                raise HTTPError(404)
+            self.render_json_response(Code=200, Msg='OK', **job)
         else:
             user = self.get_argument('manager', '') or self.get_argument('user', '')
             is_cms = False
