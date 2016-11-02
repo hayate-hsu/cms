@@ -159,7 +159,8 @@ class MessageHandler(AuthTokenHandler):
         '''
         # self.set_header('Access-Control-Allow-Origin', '*')
         origin = self.request.headers.get('Origin', '')
-        if origin and origin in settings['sites']:
+        # if origin and origin in settings['sites']:
+        if origin:
             self.set_header('Access-Control-Allow-Origin', origin)
         callback = self.get_argument('callback', None)
         # check should return jsonp
@@ -181,9 +182,9 @@ class MessageHandler(AuthTokenHandler):
             self.render_json_response(Code=200, Msg='OK', **message)
         else:
             if self.is_mobile:
-                self.render('m_message.tmpt', **message)
+                self.render('news.html', message=message)
             else:
-                self.render('message.tmpt', **message)
+                self.render('message.tmpt', message=message)
 
     def get(self, _id=''):
         '''

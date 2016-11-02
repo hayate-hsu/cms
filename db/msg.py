@@ -279,9 +279,9 @@ class MSG_DB(MySQL):
                 # doesn't check message type
                 sql = '''select {} {} from message {}  
                 where message.groups = "{}" {} {} {}  
-                order by message.status desc, message.ctime desc limit {},{} {} 
+                order by message.status desc, message.ctime desc limit {},{} 
                 '''.format(filters, gmfilter, gmjoin, groups, gmtype, 
-                           isimg, label, expired, pos, nums)
+                           isimg, label, pos, nums)
 
             cur.execute(sql)
             results = cur.fetchall()
