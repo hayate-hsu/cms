@@ -73,10 +73,15 @@ def create_message(**kwargs):
     code = util.md5(kwargs['groups'], kwargs['title'], kwargs['subtitle'], kwargs['content']) 
     code = code.hexdigest()
     kwargs['id'] = code
+    ap_groups = kwargs.pop('ap_groups', [])
     try:
         mysql.create_message(**kwargs)
     except IntegrityError:
         raise HTTPError(409, reason='duplicate message')
+    # 
+    # pop ap_groups
+    if ap_groups:
+        mysql.create_ap_msg_tuple(code, kwargs['groups'], ap_groups)
 
 @util.check_codes
 def update_message(_id, **kwargs):

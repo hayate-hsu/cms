@@ -192,10 +192,12 @@ class MSG_DB(MySQL):
         '''
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
+
             key_str = ', '.join(kwargs.keys())
             value_str = ', '.join(["'{}'".format(item) for item in kwargs.values()])
             sql = 'insert into message ({}) values({})'.format(key_str, value_str)
             cur.execute(sql)
+
             conn.commit()
 
     def update_message(self, _id, **kwargs):
@@ -230,7 +232,7 @@ class MSG_DB(MySQL):
             cur.execute(sql)
             return cur.fetchone()
 
-    def get_messages(self, groups, mask, isimg, gmtype, label, expired, pos, nums=10, ismanager=False):
+    def get_messages(self, groups, mask, isimg, gmtype, label, expired, pos, nums=10, ismanager=False, ap_groups=[]):
         '''
             id title subtitle section mask author groups status ctime content image
             get groups's messages excelpt content filed
@@ -269,24 +271,51 @@ class MSG_DB(MySQL):
                 gmfilter = ',gmtype.name as gmtype '
                 gmjoin = 'left join gmtype on message.gmtype=gmtype.id '
 
-            if mask:
-                sql = '''select {} {} from message {} 
-                where message.groups = "{}" {} {} and message.mask & {} = {} {} {} 
+            if ap_groups:
+                ap_groups = ','.join(['"{}"'.format for item in ap_groups])
+                smask = 'and message.mask & {} = {}'.format(__MASK__, mask) if mask else ''
+                sql = '''select {} from message 
+                left join ap_msg on message.id = ap_msg.msg_id 
+                where message.groups="{}" {} {} {} and 
+                ap_msg.ap_group in ()
+                group by message.id 
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filters, gmfilter, gmjoin, groups, gmtype, isimg, 
-                           __MASK__, mask, label, expired, pos, nums)
+                '''.format(filter, groups, isimg, label, smask,  ap_groups, pos, nums)
+                access_log.info('sql: {}'.format(sql))
+                print('sql, {}'.format(sql))
             else:
-                # doesn't check message type
-                sql = '''select {} {} from message {}  
-                where message.groups = "{}" {} {} {}  
-                order by message.status desc, message.ctime desc limit {},{} 
-                '''.format(filters, gmfilter, gmjoin, groups, gmtype, 
-                           isimg, label, pos, nums)
+                if mask:
+                    sql = '''select {} {} from message {} 
+                    where message.groups = "{}" {} {} and message.mask & {} = {} {} {} 
+                    order by message.status desc, message.ctime desc limit {},{}
+                    '''.format(filters, gmfilter, gmjoin, groups, gmtype, isimg, 
+                               __MASK__, mask, label, expired, pos, nums)
+                else:
+                    # doesn't check message type
+                    sql = '''select {} {} from message {}  
+                    where message.groups = "{}" {} {} {}  
+                    order by message.status desc, message.ctime desc limit {},{} 
+                    '''.format(filters, gmfilter, gmjoin, groups, gmtype, 
+                               isimg, label, pos, nums)
+
 
             cur.execute(sql)
             results = cur.fetchall()
             return results if results else []
 
+
+    def create_ap_msg_tuple(self, msg_id, groups, ap_groups):
+        '''
+            create new msg ap tuple
+        '''
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor(DICT_CUR)
+            for ap_group in ap_groups:
+                sql = '''insert into ap_msg (ap_group, msg_id, _location) 
+                values("{}", "{}", "{}")'''.format(ap_group, msg_id, groups)
+                cur.execute(sql)
+
+            conn.commit()
 
 db = MSG_DB()
 from config import settings

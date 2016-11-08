@@ -72,7 +72,9 @@ class PageHandler(BaseHandler):
 
 class AuthTokenHandler(BaseHandler):
     def check_token(self):
-        user = self.get_argument('manager') or self.get_argument('user')
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        if not user:
+            raise HTTPError(400, reason='Missing manager argument')
         token = self.get_argument('token')
 
         manager.check_token(user, token)
@@ -124,7 +126,9 @@ class AccountHandler(BaseHandler):
         '''
             manager login
         '''
-        user = self.get_argument('manager') or self.get_argument('user')
+        user = self.get_argument('manager', '') or self.get_argument('user')
+        if not user:
+            raise HTTPError(400, reason='Missing manager argument')
         # password has been encrypted by md5
         password = self.get_argument('password')
 
@@ -157,11 +161,11 @@ class MessageHandler(AuthTokenHandler):
         '''
             Encode dict and return response to client
         '''
-        # self.set_header('Access-Control-Allow-Origin', '*')
-        origin = self.request.headers.get('Origin', '')
-        # if origin and origin in settings['sites']:
-        if origin:
-            self.set_header('Access-Control-Allow-Origin', origin)
+        self.set_header('Access-Control-Allow-Origin', '*')
+        # origin = self.request.headers.get('Origin', '')
+        # # if origin and origin in settings['sites']:
+        # if origin:
+        #     self.set_header('Access-Control-Allow-Origin', origin)
         callback = self.get_argument('callback', None)
         # check should return jsonp
         if callback:
@@ -233,14 +237,20 @@ class MessageHandler(AuthTokenHandler):
             create new message record
             title subtitle section mask author groups status ctime content image
             labels : labes are separate by ' '
+
+            # add ap_groups field, if existed, create message to the special groups
         '''
-        user = self.get_argument('manager') or self.get_argument('user')
+        user = self.get_argument('manager', '') or self.get_argument('user')
         self.check_token()
         kwargs = {key:value[0] for key,value in self.request.arguments.iteritems()}
         kwargs['author'] = user
         kwargs.pop('token')
         kwargs.pop('manager')
         kwargs['groups'] = manager.check_location(user)
+
+        if 'ap_groups' in kwargs:
+            # split groups to list
+            kwargs['ap_groups'] = kwargs['ap_groups'].split(',')
        
         msg.create_message(**kwargs)
         self.render_json_response(**self.OK)
