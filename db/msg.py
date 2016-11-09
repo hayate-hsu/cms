@@ -272,15 +272,18 @@ class MSG_DB(MySQL):
                 gmjoin = 'left join gmtype on message.gmtype=gmtype.id '
 
             if ap_groups:
-                # ap_groups = ','.join(['"{}"'.format for item in ap_groups])
-                smask = 'and message.mask & {} = {}'.format(__MASK__, mask) if mask else ''
+                ap_groups = ap_groups.split(',')
+                ap_groups = ','.join(['"{}"'.format(item) for item in ap_groups])
+                smask = 'and message.mask & {}'.format(mask) if mask else ''
                 sql = '''select {} from message 
                 left join ap_msg on message.id = ap_msg.msg_id 
                 where message.groups="{}" {} {} {} and 
-                ap_msg.ap_group in ({})
+                (ap_msg.ap_group in ({}) or ap_msg.ap_group is null)
                 group by message.id 
                 order by message.status desc, message.ctime desc limit {},{}
                 '''.format(filters, groups, isimg, label, smask,  ap_groups, pos, nums)
+                # ap_msg.ap_group in ({})
+                #(ap_msg.ap_group in ({}) or ap_msg.ap_group is null)
             else:
                 if mask:
                     sql = '''select {} {} from message {} 
