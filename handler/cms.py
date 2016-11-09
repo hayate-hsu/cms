@@ -223,9 +223,10 @@ class MessageHandler(AuthTokenHandler):
         gmtype = int(self.get_argument('gmtype', 0))
         isimg = int(self.get_argument('isimg', 0))
         expired = int(self.get_argument('expired', 0))
+        ap_groups = self.get_argument('ap_groups', '')
         pos = page*nums
 
-        messages = msg.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager)
+        messages = msg.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager, ap_groups=ap_groups)
         # logger.info('messages: {}'.format(messages[0]['image']))
         isEnd = 1 if len(messages) < nums else 0
 

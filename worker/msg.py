@@ -93,7 +93,7 @@ def delete_message(_id):
 def get_message(_id):
     return mysql.get_message(_id)
 
-def get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager):
+def get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager, ap_groups=''):
     '''
         get messages 
         filter  : groups, mask
@@ -102,7 +102,7 @@ def get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanag
     if expired:
         days = 0 - expired
         expired = util.now('%Y-%m-%d', days=days)
-    return mysql.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager)
+    return mysql.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager, ap_groups)
 
 def create_file(data, **kwargs):
     '''

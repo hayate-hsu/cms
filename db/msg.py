@@ -232,7 +232,7 @@ class MSG_DB(MySQL):
             cur.execute(sql)
             return cur.fetchone()
 
-    def get_messages(self, groups, mask, isimg, gmtype, label, expired, pos, nums=10, ismanager=False, ap_groups=[]):
+    def get_messages(self, groups, mask, isimg, gmtype, label, expired, pos, nums=10, ismanager=False, ap_groups=''):
         '''
             id title subtitle section mask author groups status ctime content image
             get groups's messages excelpt content filed
@@ -272,17 +272,15 @@ class MSG_DB(MySQL):
                 gmjoin = 'left join gmtype on message.gmtype=gmtype.id '
 
             if ap_groups:
-                ap_groups = ','.join(['"{}"'.format for item in ap_groups])
+                # ap_groups = ','.join(['"{}"'.format for item in ap_groups])
                 smask = 'and message.mask & {} = {}'.format(__MASK__, mask) if mask else ''
                 sql = '''select {} from message 
                 left join ap_msg on message.id = ap_msg.msg_id 
                 where message.groups="{}" {} {} {} and 
-                ap_msg.ap_group in ()
+                ap_msg.ap_group in ({})
                 group by message.id 
                 order by message.status desc, message.ctime desc limit {},{}
-                '''.format(filter, groups, isimg, label, smask,  ap_groups, pos, nums)
-                access_log.info('sql: {}'.format(sql))
-                print('sql, {}'.format(sql))
+                '''.format(filters, groups, isimg, label, smask,  ap_groups, pos, nums)
             else:
                 if mask:
                     sql = '''select {} {} from message {} 
