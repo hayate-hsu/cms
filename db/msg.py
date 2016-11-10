@@ -219,6 +219,10 @@ class MSG_DB(MySQL):
             cur = conn.cursor(DICT_CUR)
             sql = 'delete from message where id = "{}"'.format(_id)
             cur.execute(sql)
+
+            sql = 'delete from ap_msg where msg_id = "{}"'.format(_id)
+            cur.execute(sql)
+
             conn.commit()
 
     def get_message(self, _id):
