@@ -312,9 +312,10 @@ class MSG_DB(MySQL):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor(DICT_CUR)
             for ap_group in ap_groups:
-                sql = '''insert into ap_msg (ap_group, msg_id, _location) 
-                values("{}", "{}", "{}")'''.format(ap_group, msg_id, groups)
-                cur.execute(sql)
+                if ap_group:
+                    sql = '''insert into ap_msg (ap_group, msg_id, _location) 
+                    values("{}", "{}", "{}")'''.format(ap_group, msg_id, groups)
+                    cur.execute(sql)
 
             conn.commit()
 

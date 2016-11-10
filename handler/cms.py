@@ -251,7 +251,8 @@ class MessageHandler(AuthTokenHandler):
 
         if 'ap_groups' in kwargs:
             # split groups to list
-            kwargs['ap_groups'] = kwargs['ap_groups'].split(',')
+            ap_groups = self.get_argument('ap_groups', '')
+            kwargs['ap_groups'] = ap_groups.split(',')
        
         msg.create_message(**kwargs)
         self.render_json_response(**self.OK)
