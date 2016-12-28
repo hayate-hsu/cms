@@ -100,8 +100,10 @@ def get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanag
         position: start , per
     '''
     if expired:
-        days = 0 - expired
-        expired = util.now('%Y-%m-%d', days=days)
+        # days = 0 - expired
+        # expired = util.now('%Y-%m-%d', days=days)
+        expired = util.now('%Y-%m-%d')
+        
     return mysql.get_messages(groups, mask, isimg, gmtype, label, expired, pos, nums, ismanager, ap_groups)
 
 def create_file(data, **kwargs):

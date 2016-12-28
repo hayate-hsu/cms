@@ -270,7 +270,8 @@ class MSG_DB(MySQL):
             gmtype = 'and message.gmtype = {}'.format(gmtype) if gmtype else ''
             isimg = 'and message.image <> ""'.format(isimg) if isimg else ''
             label = " and message.label like'%{}%'".format(label) if label else ''
-            expired = ' and message.ctime > "{}" '.format(expired) if expired else ''
+            # expired = ' and message.ctime > "{}" '.format(expired) if expired else ''
+            expired = ' and message.expired > "{}" '.format(expired) if expired else ''
             if ismanager:
                 gmfilter = ',gmtype.name as gmtype '
                 gmjoin = 'left join gmtype on message.gmtype=gmtype.id '
